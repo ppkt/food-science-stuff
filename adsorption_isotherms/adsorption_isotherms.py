@@ -4,7 +4,6 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 
-
 """
 Small program to calculate sorption isotherms using GAB model
 """
@@ -48,13 +47,27 @@ def lewicki_model(v2, a, b, c):
     return (a / np.power(1 - v2, b)) - (a / (1 + np.power(v2, c)))
 
 
+def peleg_model(v2, a, b, c, d):
+    """
+    Empirical model described by Peleg
+
+    :param v2: water activitiy (0.0 - 1.0)
+    :param a: model parameter 1
+    :param b: model parameter 2
+    :param c: model parameter 3
+    :param d: model parameter 4
+    :return:
+    """
+    return (a * np.power(v2, c)) + (b * np.power(v2, d))
+
+
 if __name__ == '__main__':
     # read csv file
     data = pd.read_csv('isotherms.csv')
     x_data, y_data = data['v2'], data['v1']
 
     # model
-    model = lewicki_model
+    model = peleg_model
 
     # fit model to experimental data
     popt, _ = curve_fit(model, x_data, y_data, method='lm')
@@ -66,7 +79,7 @@ if __name__ == '__main__':
     print('parameters:\t', popt)
 
     # plot curve
-    plot_data = np.arange(0.0, x_data.iloc[-1] + 0.01, 0.01)
+    plot_data = np.linspace(0, x_data.iloc[-1], num=500)
     plt.plot(plot_data, model(plot_data, *popt))
 
     # plot experimental points
