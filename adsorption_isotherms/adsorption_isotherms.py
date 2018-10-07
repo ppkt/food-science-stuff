@@ -35,13 +35,26 @@ def bet_model(v2: float, c: float, x: float) -> float:
     return (x * c * v2) / ((1 - v2) * (1 + (c - 1) * v2))
 
 
+def lewicki_model(v2, a, b, c):
+    """
+    Empirical model described by P. Lewicki
+
+    :param v2: water activity (0.0 - 1.0)
+    :param a: model parameter 1
+    :param b: model parameter 2
+    :param c: model parameter 3
+    :return:
+    """
+    return (a / np.power(1 - v2, b)) - (a / (1 + np.power(v2, c)))
+
+
 if __name__ == '__main__':
     # read csv file
     data = pd.read_csv('isotherms.csv')
     x_data, y_data = data['v2'], data['v1']
 
     # model
-    model = bet_model
+    model = lewicki_model
 
     # fit model to experimental data
     popt, _ = curve_fit(model, x_data, y_data, method='lm')
