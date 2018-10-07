@@ -10,11 +10,11 @@ Small program to calculate sorption isotherms using GAB model
 """
 
 
-def gab_model(v2, c, k, x):
+def gab_model(v2: float, c: float, k: float, x: float) -> float:
     """
-    Model GAB
+    Model GAB - Guggenheim-Anderson-de Boer
 
-    :param v2: water activity
+    :param v2: water activity (model is accurate for values 0.0 - 0.75)
     :param c: model parameter 1
     :param k: model parameter 2
     :param x: monolayer moisture content
@@ -23,25 +23,38 @@ def gab_model(v2, c, k, x):
     return (x * c * k * v2) / ((1 - (k * v2)) * (1 - (k * v2) + (c * k * v2)))
 
 
+def bet_model(v2: float, c: float, x: float) -> float:
+    """
+    Model BET - Brunauer–Emmett–Teller
+
+    :param v2: water activity (model is accurate for values 0.0 - 0.5)
+    :param c: model parameter
+    :param x: monolayer moisture content
+    :return:
+    """
+    return (x * c * v2) / ((1 - v2) * (1 + (c - 1) * v2))
+
+
 if __name__ == '__main__':
     # read csv file
     data = pd.read_csv('isotherms.csv')
     x_data, y_data = data['v2'], data['v1']
 
+    # model
+    model = bet_model
+
     # fit model to experimental data
-    popt, _ = curve_fit(gab_model, x_data, y_data, method='lm')
+    popt, _ = curve_fit(model, x_data, y_data, method='lm')
 
     # calculate R2 and print c, k, parameters
-    new_y_data = gab_model(x_data, *popt)
+    new_y_data = model(x_data, *popt)
     r2 = r2_score(y_data, new_y_data)
     print('r2:\t', r2)
-    print('c:\t', popt[0])
-    print('k:\t', popt[1])
-    print('x:\t', popt[2])
+    print('parameters:\t', popt)
 
     # plot curve
-    plot_data=np.arange(0.0, x_data.iloc[-1] + 0.01, 0.01)
-    plt.plot(plot_data, gab_model(plot_data, *popt))
+    plot_data = np.arange(0.0, x_data.iloc[-1] + 0.01, 0.01)
+    plt.plot(plot_data, model(plot_data, *popt))
 
     # plot experimental points
     plt.plot(x_data, y_data, 'o')
