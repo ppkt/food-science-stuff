@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 
 """
-Small program to calculate sorption isotherms using GAB model
+Small program to calculate adsorption isotherms using different models
 """
 
 
@@ -51,7 +51,7 @@ def peleg_model(v2, a, b, c, d):
     """
     Empirical model described by Peleg
 
-    :param v2: water activitiy (0.0 - 1.0)
+    :param v2: water activity (0.0 - 1.0)
     :param a: model parameter 1
     :param b: model parameter 2
     :param c: model parameter 3
@@ -63,8 +63,14 @@ def peleg_model(v2, a, b, c, d):
 
 if __name__ == '__main__':
     # read csv file
+    # first column of CSV file contains water activity
+    # second one an equilibrium moisture content, e.g.
+    # 0.11,0.0327
+    # 0.23,0.0458
+    # 0.33,0.0612
     data = pd.read_csv('isotherms.csv')
-    x_data, y_data = data['v2'], data['v1']
+
+    x_data, y_data = data.iloc[:, 0], data.iloc[:, 1]
 
     # model
     model = peleg_model
@@ -72,9 +78,9 @@ if __name__ == '__main__':
     # fit model to experimental data
     popt, _ = curve_fit(model, x_data, y_data, method='lm')
 
-    # calculate R2 and print c, k, parameters
-    new_y_data = model(x_data, *popt)
-    r2 = r2_score(y_data, new_y_data)
+    # print R2 and model coefficients
+    model_y_data = model(x_data, *popt)
+    r2 = r2_score(y_data, model_y_data)
     print('r2:\t', r2)
     print('parameters:\t', popt)
 
